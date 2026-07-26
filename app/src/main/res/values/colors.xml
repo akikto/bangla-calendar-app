@@ -1,0 +1,18 @@
+<resources>
+    <color name="header_green">#009900</color>
+    <color name="header_orange">#FF6600</color>
+    <color name="border_orange">#FFA500</color>
+    <color name="border_dark_orange">#CC5200</color>
+    <color name="cream_bg">#FFFACD</color>
+    <color name="cell_bg">#FFFFF0</color>
+    <color name="cell_border">#FFD700</color>
+    <color name="empty_cell_bg">#F0F0F0</color>
+    <color name="today_bg">#FFFF00</color>
+    <color name="today_border">#FF6600</color>
+    <color name="red_holiday">#CC0000</color>
+    <color name="day_number_blue">#00008B</color>
+    <color name="sub_text_gray">#555555</color>
+    <color name="white">#FFFFFF</color>
+    <color name="festival_purple">#9C27B0</color>
+    <color name="gov_red">#E53935</color>
+</resources>

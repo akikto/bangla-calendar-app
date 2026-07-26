@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বাঙালি মাসিক ক্যালেন্ডার</title>
+    <style>
+        html, body { width: 100%; overscroll-behavior: none; }
+        html { background-color: #e0e0e0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #e0e0e0; padding: 8px; display: flex; justify-content: center; align-items: flex-start; }
+        .page-wrap {
+            width: 100%; max-width: 450px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .mini-calendar {
+            flex-shrink: 0;
+            background-color: #FFFACD;
+            border: 2px solid #FFA500;
+            border-radius: 6px; padding: 4px 5px 5px 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .mini-title {
+            font-size: 11px; font-weight: bold; color: #FF6600;
+            text-align: center; margin-bottom: 3px;
+        }
+        .mini-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .mini-cell.mini-empty { visibility: hidden; }
+        .mini-weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 2px; margin-bottom: 3px;
+        }
+        .mini-weekdays div {
+            text-align: center; font-size: 9px; font-weight: bold;
+            color: #fff; background-color: #009900;
+            padding: 3px 0; border-radius: 2px;
+        }
+        .mini-weekdays div.sun { background-color: #CC0000; }
+        .mini-cell {
+            background-color: #F5F5E8;
+            border: 1px solid #EFD9A0;
+            border-radius: 3px;
+            text-align: center;
+            padding: 2px 0 3px 0;
+            opacity: 0.75;
+        }
+        .mini-cell .mn { font-size: 12px; font-weight: bold; color: #555577; line-height: 1.1; }
+        .mini-cell .ms { font-size: 7.5px; color: #888888; line-height: 1; }
+        .calendar-container {
+            width: 100%; max-width: 450px;
+            flex-shrink: 0;
+            display: flex; flex-direction: column;
+            background-color: #FFFACD;
+            border: 3px solid #FFA500;
+            border-radius: 6px; padding: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        .calendar-header {
+            background-color: #FF6600; color: #FFFFFF;
+            text-align: center; padding: 10px 5px;
+            font-size: 20px; font-weight: bold;
+            border-radius: 4px; margin-bottom: 5px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .nav-btn {
+            background: #FF0000; color: white; border: none;
+            border-radius: 4px; padding: 6px 14px;
+            font-size: 18px; cursor: pointer; line-height: 1; flex-shrink: 0;
+        }
+        .nav-btn:active { background: #D4AF37; }
+        .header-title { flex: 1; text-align: center; }
+        .weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 2px; margin-bottom: 4px; flex-shrink: 0;
+        }
+        .weekdays div {
+            background-color: #009900; color: white;
+            text-align: center; padding: 6px 0;
+            font-weight: bold; font-size: 13px;
+        }
+        .weekdays div.sunday { background-color: #CC0000; }
+        .weekdays div .en-name {
+            display: block;
+            font-size: 9px;
+            font-weight: normal;
+            line-height: 1.3;
+        }
+        .days-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        /* Cell: flex column, top=মাসের নাম, middle=তারিখ, bottom=বাংলা তারিখ */
+        .day-cell {
+            background-color: #FFFFF0;
+            border: 1px solid #FFD700;
+            aspect-ratio: 0.85;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 2px 3px 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* উপরের বাম কোণে বাংলা মাসের নাম */
+        .bn-month-label {
+            width: 100%;
+            font-size: 7.5px;
+            color: #CC0000;
+            font-weight: bold;
+            line-height: 1;
+            text-align: left;
+            min-height: 9px;
+        }
+        /* যখন মাস নেই তখনও জায়গা ধরে রাখবে */
+        .bn-month-placeholder {
+            width: 100%;
+            min-height: 9px;
+        }
+
+        /* মাঝে ইংরেজি তারিখ */
+        .day-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00008B;
+            line-height: 1;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .holiday { color: #FF0000 !important; }
+
+        /* নিচে বাংলা তারিখ */
+        .sub-text {
+            font-size: 9px;
+            color: #555555;
+            line-height: 1;
+            width: 100%;
+            text-align: right;
+            padding-right: 2px;
+        }
+
+        .empty-cell { background-color: #F0F0F0; border: 1px solid #DDDDDD; opacity: 0.55; }
+        .empty-cell .day-number { color: #888888; }
+        .empty-cell .sub-text { color: #999999; }
+        .today-cell { background-color: #FFFF00 !important; border: 2px solid #FF6600 !important; }
+
+        .event-dots {
+            position: absolute; top: 2px; left: 2px;
+            display: flex; gap: 1.5px; z-index: 2;
+        }
+        .event-dots span {
+            width: 5px; height: 5px; border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-festival    { background-color: #9C27B0; }
+        .dot-birthday    { background-color: #E91E8C; }
+        .dot-important   { background-color: #1E88E5; }
+        .dot-bank        { background-color: #00897B; }
+        .dot-gov         { background-color: #E53935; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+            z-index: 100; padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #FFFDF5; border-radius: 10px;
+            border: 2px solid #FFA500;
+            width: 100%; max-width: 340px;
+            max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background-color: #FF6600; color: #fff;
+            padding: 12px 14px; border-radius: 8px 8px 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header .md-date { font-size: 16px; font-weight: bold; }
+        .modal-header .md-close {
+            background: rgba(255,255,255,0.25); border: none; color: #fff;
+            width: 26px; height: 26px; border-radius: 50%;
+            font-size: 16px; line-height: 1; cursor: pointer;
+        }
+        .modal-body { padding: 12px 14px; }
+        .modal-body .no-event { color: #888; font-size: 14px; text-align: center; padding: 10px 0; }
+        .event-item {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 8px 0; border-bottom: 1px solid #eee;
+        }
+        .event-item:last-child { border-bottom: none; }
+        .event-item .dot-lg {
+            width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+        }
+        .event-item .ev-title { font-size: 14px; font-weight: bold; color: #333; }
+        .event-item .ev-type { font-size: 11px; color: #777; }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+    <div class="mini-calendar" id="prev-mini">
+        <div class="mini-title" id="prev-mini-title"></div>
+        <div class="mini-weekdays">
+            <div class="sun">র</div><div>সো</div><div>ম</div><div>বু</div><div>বৃ</div><div>শু</div><div>শ</div>
+        </div>
+        <div class="mini-grid" id="prev-mini-grid"></div>
+    </div>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+            <div class="header-title" id="header-title"></div>
+            <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+        </div>
+        <div class="weekdays">
+            <div class="sunday">রবি<span class="en-name">Sun</span></div>
+            <div>সোম<span class="en-name">Mon</span></div><div>মঙ্গল<span class="en-name">Tue</span></div><div>বুধ<span class="en-name">Wed</span></div>
+            <div>বৃহ<span class="en-name">Thu</span></div><div>শুক্র<span class="en-name">Fri</span></div><div>শনি<span class="en-name">Sat</span></div>
+        </div>
+        <div class="days-grid" id="days-grid"></div>
+    </div>
+
+    <div class="mini-calendar" id="next-mini">
+        <div class="mini-title" id="next-mini-title"></div>
+        <div class="mini-weekdays">
+            <div class="sun">র</div><div>সো</div><div>ম</div><div>বু</div><div>বৃ</div><div>শু</div><div>শ</div>
+        </div>
+        <div class="mini-grid" id="next-mini-grid"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="event-modal" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="md-date" id="modal-date"></div>
+            <button class="md-close" onclick="closeModal()">&#10005;</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<script>
+const bnMonthNames = ['জানুয়ারী','ফেব্রুয়ারী','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const bnCalMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
+
+function toBn(n) {
+    const d = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return String(n).split('').map(c => d[parseInt(c)] ?? c).join('');
+}
+
+const bnStarts = [
+    [3,14],[4,16],[5,16],[6,17],[7,17],[8,17],
+    [9,17],[10,16],[11,16],[0,15],[1,14],[2,15]
+];
+
+function makeStart(idx, baseYear) {
+    const [m, d] = bnStarts[idx];
+    const yr = (idx >= 9) ? baseYear + 1 : baseYear;
+    return new Date(yr, m, d);
+}
+
+function getBengaliInfo(jsDate) {
+    const y = jsDate.getFullYear();
+    for (let base = y; base >= y - 1; base--) {
+        for (let i = 0; i < 12; i++) {
+            const start = makeStart(i, base);
+            const end   = makeStart((i + 1) % 12, i === 11 ? base + 1 : base);
+            if (jsDate >= start && jsDate < end) {
+                return {
+                    day: Math.floor((jsDate - start) / 86400000) + 1,
+                    monthName: bnCalMonths[i]
+                };
+            }
+        }
+    }
+    return { day: 1, monthName: '' };
+}
+
+const today = new Date();
+let currentYear = today.getFullYear();
+let currentMonth = today.getMonth();
+
+/* ==========================================================
+   ইভেন্ট ডেটা (পশ্চিমবঙ্গ সরকারের ছুটির তালিকা, ২০২৬)
+   সূত্র: Government of West Bengal, Finance (Audit) Department,
+   Notification No. 4188-F(P2), dated 27/11/2025
+   key ফরম্যাট: "YYYY-M-D"  (মাস 0 থেকে শুরু, তাই জানুয়ারী=0, জুলাই=6)
+   type হতে পারে: festival, birthday, important, bank, gov
+   নিজের পরিবার/বন্ধুদের জন্মদিন বা অন্য দিন এখানেই যোগ করে নিতে পারো।
+   দ্রষ্টব্য: চান্দ্র উৎসবের (দুর্গাপূজা, ইদ ইত্যাদি) তারিখ প্রতি বছর বদলায়,
+   তাই এই তারিখগুলো শুধু ২০২৬ সালের জন্য প্রযোজ্য।
+   ========================================================== */
+const events = {
+    /* ---- জানুয়ারী ---- */
+    "2026-0-1":   [{ type: "gov", title: "নববর্ষ (New Year's Day)" }],
+    "2026-0-12":  [{ type: "gov", title: "স্বামী বিবেকানন্দের জন্মজয়ন্তী" }],
+    "2026-0-22":  [{ type: "gov", title: "সরস্বতী পূজার আগের দিন" }],
+    "2026-0-23":  [
+        { type: "gov", title: "নেতাজির জন্মজয়ন্তী" },
+        { type: "festival", title: "সরস্বতী পূজা (শ্রীপঞ্চমী)" }
+    ],
+    "2026-0-26":  [{ type: "gov", title: "প্রজাতন্ত্র দিবস (Republic Day)" }],
+
+    /* ---- ফেব্রুয়ারী ---- */
+    "2026-1-4":   [{ type: "gov", title: "শবে বরাত" }],
+    "2026-1-14":  [{ type: "gov", title: "ঠাকুর পঞ্চানন বর্মার জন্মজয়ন্তী" }],
+    "2026-1-15":  [{ type: "festival", title: "শিবরাত্রি" }],
+
+    /* ---- মার্চ ---- */
+    "2026-2-3":   [{ type: "festival", title: "দোলযাত্রা" }],
+    "2026-2-4":   [{ type: "festival", title: "হোলি (দোলের পরের দিন)" }],
+    "2026-2-17":  [{ type: "gov", title: "শ্রীশ্রী হরিচাঁদ ঠাকুরের জন্মদিন" }],
+    "2026-2-20":  [{ type: "gov", title: "ইদ-উল-ফিতরের আগের দিন" }],
+    "2026-2-21":  [{ type: "gov", title: "ইদ-উল-ফিতর" }],
+    "2026-2-28":  [{ type: "festival", title: "রামনবমী" }],
+    "2026-2-31":  [{ type: "gov", title: "মহাবীর জয়ন্তী" }],
+
+    /* ---- এপ্রিল ---- */
+    "2026-3-1":   [{ type: "bank", title: "ব্যাংক হিসাব বছর সমাপ্তি (শুধু ব্যাংকের ছুটি)" }],
+    "2026-3-3":   [{ type: "gov", title: "গুড ফ্রাইডে" }],
+    "2026-3-4":   [{ type: "festival", title: "ইস্টার শনিবার (খ্রিস্টানদের জন্য)" }],
+    "2026-3-14":  [{ type: "gov", title: "ড. বি. আর. আম্বেদকরের জন্মজয়ন্তী" }],
+    "2026-3-15":  [{ type: "festival", title: "পয়লা বৈশাখ (নববর্ষ)" }],
+
+    /* ---- মে ---- */
+    "2026-4-1":   [
+        { type: "gov", title: "মে দিবস" },
+        { type: "festival", title: "বুদ্ধ পূর্ণিমা" }
+    ],
+    "2026-4-9":   [{ type: "festival", title: "রবীন্দ্রনাথের জন্মজয়ন্তী (রবীন্দ্র জয়ন্তী)" }],
+    "2026-4-26":  [{ type: "gov", title: "বকরি ইদের আগের দিন" }],
+    "2026-4-27":  [{ type: "gov", title: "ইদ-উজ-জোহা (বকরি ইদ)" }],
+
+    /* ---- জুন ---- */
+    "2026-5-26":  [{ type: "gov", title: "মহরম" }],
+    "2026-5-30":  [{ type: "festival", title: "হুল দিবস (আদিবাসী সাঁওতালদের জন্য)" }],
+
+    /* ---- জুলাই ---- */
+    "2026-6-13":  [{ type: "gov", title: "কবি ভানুভক্তের জন্মদিন (দার্জিলিং ও কালিম্পং)" }],
+    "2026-6-16":  [{ type: "festival", title: "রথযাত্রা" }],
+
+    /* ---- আগস্ট ---- */
+    "2026-7-15":  [{ type: "gov", title: "স্বাধীনতা দিবস (Independence Day)" }],
+    "2026-7-26":  [{ type: "gov", title: "ফতেহা-দ্বাজ-দহম" }],
+    "2026-7-28":  [{ type: "festival", title: "রাখী বন্ধন" }],
+
+    /* ---- সেপ্টেম্বর ---- */
+    "2026-8-4":   [{ type: "festival", title: "জন্মাষ্টমী" }],
+    "2026-8-17":  [{ type: "festival", title: "বিশ্বকর্মা পূজা" }],
+
+    /* ---- অক্টোবর — দুর্গাপূজা ও সংশ্লিষ্ট ছুটি ---- */
+    "2026-9-2":   [{ type: "gov", title: "গান্ধী জয়ন্তী" }],
+    "2026-9-10":  [{ type: "festival", title: "মহালয়া" }],
+    "2026-9-15":  [{ type: "festival", title: "মহাচতুর্থী" }],
+    "2026-9-16":  [{ type: "festival", title: "মহাপঞ্চমী" }],
+    "2026-9-17":  [{ type: "festival", title: "মহাষষ্ঠী" }],
+    "2026-9-18":  [{ type: "festival", title: "মহাসপ্তমী" }],
+    "2026-9-19":  [{ type: "festival", title: "মহাষ্টমী" }],
+    "2026-9-20":  [{ type: "festival", title: "মহানবমী" }],
+    "2026-9-21":  [{ type: "festival", title: "বিজয়া দশমী" }],
+    "2026-9-22":  [{ type: "gov", title: "দুর্গাপূজার অতিরিক্ত ছুটি" }],
+    "2026-9-23":  [{ type: "gov", title: "দুর্গাপূজার অতিরিক্ত ছুটি" }],
+    "2026-9-24":  [{ type: "gov", title: "দুর্গাপূজার অতিরিক্ত ছুটি" }],
+    "2026-9-25":  [{ type: "festival", title: "লক্ষ্মী পূজা" }],
+    "2026-9-26":  [{ type: "festival", title: "লক্ষ্মী পূজার অতিরিক্ত ছুটি" }],
+
+    /* ---- নভেম্বর ---- */
+    "2026-10-8":  [{ type: "festival", title: "কালীপূজা / দীপাবলি" }],
+    "2026-10-9":  [{ type: "gov", title: "কালীপূজার অতিরিক্ত ছুটি" }],
+    "2026-10-10": [{ type: "gov", title: "কালীপূজার অতিরিক্ত ছুটি" }],
+    "2026-10-11": [{ type: "festival", title: "ভ্রাতৃদ্বিতীয়া (ভাইফোঁটা)" }],
+    "2026-10-12": [{ type: "gov", title: "ভ্রাতৃদ্বিতীয়ার পরের দিন" }],
+    "2026-10-15": [
+        { type: "festival", title: "ছট পূজা" },
+        { type: "gov", title: "বীরসা মুন্ডার জন্মজয়ন্তী" }
+    ],
+    "2026-10-16": [{ type: "gov", title: "ছট পূজার অতিরিক্ত ছুটি" }],
+    "2026-10-24": [{ type: "gov", title: "গুরু নানকের জন্মজয়ন্তী" }],
+
+    /* ---- ডিসেম্বর ---- */
+    "2026-11-25": [{ type: "festival", title: "বড়দিন (Christmas)" }],
+
+    /* ---- ব্যক্তিগত উদাহরণ ---- */
+    "2026-6-6":   [{ type: "birthday", title: "উদাহরণ: রহিমের জন্মদিন" }]
+};
+
+const typeLabels = {
+    festival: "উৎসব",
+    birthday: "জন্মদিন",
+    important: "গুরুত্বপূর্ণ দিন",
+    bank: "ব্যাংক হলিডে",
+    gov: "সরকারি ছুটি"
+};
+
+function getEvents(year, month, day) {
+    return events[year + '-' + month + '-' + day] || [];
+}
+
+function addEventDots(cell, evs) {
+    if (!evs.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'event-dots';
+    evs.slice(0, 4).forEach(e => {
+        const dot = document.createElement('span');
+        dot.className = 'dot-' + e.type;
+        wrap.appendChild(dot);
+    });
+    cell.appendChild(wrap);
+}
+
+function openModal(year, month, day, evs) {
+    const dateStr = day + ' ' + bnMonthNames[month] + ' ' + year;
+    document.getElementById('modal-date').textContent = dateStr;
+    const body = document.getElementById('modal-body');
+    body.innerHTML = '';
+    if (!evs.length) {
+        const p = document.createElement('div');
+        p.className = 'no-event';
+        p.textContent = 'এই দিনে কোনো ইভেন্ট নেই।';
+        body.appendChild(p);
+    } else {
+        evs.forEach(e => {
+            const row = document.createElement('div');
+            row.className = 'event-item';
+            const dot = document.createElement('div');
+            dot.className = 'dot-lg dot-' + e.type;
+            const text = document.createElement('div');
+            text.innerHTML = '<div class="ev-title"></div><div class="ev-type"></div>';
+            text.querySelector('.ev-title').textContent = e.title;
+            text.querySelector('.ev-type').textContent = typeLabels[e.type] || e.type;
+            row.appendChild(dot);
+            row.appendChild(text);
+            body.appendChild(row);
+        });
+    }
+    document.getElementById('event-modal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('event-modal').classList.remove('open');
+}
+
+function renderCalendar(year, month) {
+    document.getElementById('header-title').textContent = bnMonthNames[month] + ' ' + year;
+    const grid = document.getElementById('days-grid');
+    grid.innerHTML = '';
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+        const c = document.createElement('div');
+        c.className = 'day-cell empty-cell';
+        grid.appendChild(c);
+    }
+
+    let prevBnMonth = '';
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const isSunday = date.getDay() === 0;
+        const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+        const bnInfo = getBengaliInfo(date);
+
+        const cell = document.createElement('div');
+        cell.className = 'day-cell' + (isToday ? ' today-cell' : '');
+
+        // TOP: বাংলা মাসের নাম (শুধু যখন বদলায়)
+        if (bnInfo.monthName !== prevBnMonth) {
+            const mnSpan = document.createElement('div');
+            mnSpan.className = 'bn-month-label';
+            mnSpan.textContent = bnInfo.monthName;
+            cell.appendChild(mnSpan);
+            prevBnMonth = bnInfo.monthName;
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'bn-month-placeholder';
+            cell.appendChild(placeholder);
+        }
+
+        // MIDDLE: ইংরেজি তারিখ
+        const num = document.createElement('div');
+        num.className = 'day-number' + (isSunday ? ' holiday' : '');
+        num.textContent = d;
+        cell.appendChild(num);
+
+        // BOTTOM: বাংলা তারিখ
+        const sub = document.createElement('div');
+        sub.className = 'sub-text';
+        sub.textContent = toBn(bnInfo.day);
+        cell.appendChild(sub);
+
+        const evs = getEvents(year, month, d);
+        addEventDots(cell, evs);
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', () => openModal(year, month, d, evs));
+
+        grid.appendChild(cell);
+    }
+
+    const rem = (firstDay + daysInMonth) % 7;
+    if (rem !== 0) {
+        for (let i = 0; i < 7 - rem; i++) {
+            const c = document.createElement('div');
+            c.className = 'day-cell empty-cell';
+            grid.appendChild(c);
+        }
+    }
+}
+
+function renderMiniCalendar(prefix, year, month) {
+    document.getElementById(prefix + '-mini-title').textContent = bnMonthNames[month] + ' ' + year + ' (১-১৪)';
+    const g = document.getElementById(prefix + '-mini-grid');
+    g.innerHTML = '';
+
+    const firstDay = new Date(year, month, 1).getDay();
+    for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'mini-cell mini-empty';
+        g.appendChild(blank);
+    }
+
+    for (let d = 1; d <= 14; d++) {
+        const date = new Date(year, month, d);
+        const bnInfo = getBengaliInfo(date);
+        const cell = document.createElement('div');
+        cell.className = 'mini-cell';
+        const mn = document.createElement('div');
+        mn.className = 'mn';
+        mn.textContent = d;
+        const ms = document.createElement('div');
+        ms.className = 'ms';
+        ms.textContent = toBn(bnInfo.day);
+        cell.appendChild(mn);
+        cell.appendChild(ms);
+        g.appendChild(cell);
+    }
+}
+
+function changeMonth(dir) {
+    currentMonth += dir;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+    renderAll(currentYear, currentMonth);
+}
+
+function renderAll(year, month) {
+    renderCalendar(year, month);
+    const pm = month === 0 ? 11 : month - 1;
+    const py = month === 0 ? year - 1 : year;
+    const nm = month === 11 ? 0 : month + 1;
+    const ny = month === 11 ? year + 1 : year;
+    renderMiniCalendar('prev', py, pm);
+    renderMiniCalendar('next', ny, nm);
+}
+
+renderAll(currentYear, currentMonth);
+</script>
+</body>
+</html>
